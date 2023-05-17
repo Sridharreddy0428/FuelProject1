@@ -150,7 +150,7 @@ def settings_window():
     nozil_label.grid(row=3, column=0, pady=10)
     nozil_entry.grid(row=3, column=1)
     
-    price_label = Label(details_frame, text="dispenser_no:", bg="white", font=("Arial", 18))
+    price_label = Label(details_frame, text="price:", bg="white", font=("Arial", 18))
     #price_entry = Entry(details_frame, width=25, font=("Arial", 18))
     price_entry = tk.Entry(details_frame, width=25, font=("Arial", 18), validate="key", validatecommand=(details_frame.register(validate_input), '%P'))
     price_label.grid(row=4, column=0, pady=10)
