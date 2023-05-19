@@ -12,16 +12,24 @@ with open(CwaDataToIotCore_json) as f:
     p.__dict__ = json.loads(json_data)
     f.close()
 
-UserId=p.UserId
-pump_name=p.pump_name
+# UserId=p.UserId
+# pump_name=p.pump_name
 issues=p.Today_total_full_issues
 transactions=p.Toatl_Transactions
 Nozil_status=p.Nozil_status
-dispenser_No=p.dispenser_no
-Nozil_No=p.Nozil_no
-price=p.Price
-density=p.density
-Fuel=p.Fuel_type
+# dispenser_No=p.dispenser_no
+# Nozil_No=p.Nozil_no
+# price=p.Price
+# density=p.density
+# Fuel=p.Fuel_type
+
+UserId=None
+pump_name=None
+dispenser_No=None
+Nozil_No=None
+price=None
+density=None
+Fuel=None
  
 # Login window
 def login_window():
@@ -67,9 +75,9 @@ def login_window():
         if username_entry.get() == "admin" and password_entry.get() == "admin123":
             login.destroy()
             if UserId is None:
-                dashboard_window()
-            else:
                 dashboard_window1()
+            else:
+                dashboard_window()
         else:
             login_status_label.config(text="Invalid username or password",font=("Arial", 12,"bold"),fg="red")
 
@@ -80,10 +88,10 @@ def login_window():
 
     Button(login_frame, text="Login", bg="#0B5394", fg="white", font=("Arial", 12), command=login_action).grid(row=3, columnspan=2, pady=20)
 
-    # Add an exit button to quit the application
-    exit_button = Button(login, text="Exit", bg="red", fg="white", font=("Arial", 12), command=exit_app)
-    # exit_button.pack(side=TOP, anchor='ne')
-    exit_button.pack(side=BOTTOM, pady=10)
+    # # Add an exit button to quit the application
+    # exit_button = Button(login, text="Exit", bg="red", fg="white", font=("Arial", 12), command=exit_app)
+    # # exit_button.pack(side=TOP, anchor='ne')
+    # exit_button.pack(side=BOTTOM, pady=10)
     # Pack the login form frame
     login_frame.pack() 
 
@@ -254,7 +262,7 @@ def start_fuel():
     Qr_frame.place(relx=0.25, rely=0.45)
 
     # Schedule the function to run after 10 seconds
-    fuelPage.after(50000, lambda: fuel_afterScan(fuelPage))
+    fuelPage.after(15000, lambda: fuel_afterScan(fuelPage))
     
 def fuel_afterScan(Page):
     Page.destroy()
@@ -326,7 +334,7 @@ def fuel_afterScan(Page):
        
     login_status_label = Label(afterScanDetails_frame, text="Started Filling", bg="white", font=("Arial bold", 16),fg='green')
     login_status_label.grid(row=j+2, columnspan=5, pady=10)
-    fuel_afterScan.after(50000, lambda: completion_window())
+    fuel_afterScan.after(15000, lambda: completion_window())
     
     def completion_window():
         global Nozil_status
@@ -335,7 +343,7 @@ def fuel_afterScan(Page):
         Nozil_status="Close"
         nozil_label = Label(details_frame, text="nozil status : {}".format(Nozil_status), bg="white", bd=1, font=("Arial", 16),relief="solid",wraplength=400)
         nozil_label.grid(row=0, column=2, padx=10, pady=10)
-        fuel_afterScan.after(50000, lambda: transactions_window(fuel_afterScan))    
+        fuel_afterScan.after(15000, lambda: transactions_window(fuel_afterScan))    
    
 def transactions_window(fuelPage):
     fuelPage.destroy()
