@@ -1,0 +1,111 @@
+{
+  "collection": {
+    "info": {
+      "_postman_id": "ef4a4047-e99c-49ca-bfec-8b987a91250c",
+      "name": "bunk_device",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+      "updatedAt": "2023-04-22T11:09:54.000Z",
+      "uid": "3576551-ef4a4047-e99c-49ca-bfec-8b987a91250c"
+    },
+    "item": [
+      {
+        "name": "/api/auto-fuel/v1/login",
+        "id": "65f37ee3-5326-461d-991b-ab4ee72b7cd9",
+        "protocolProfileBehavior": {
+          "disableBodyPruning": true
+        },
+        "request": {
+          "method": "POST",
+          "header": [],
+          "body": {
+            "mode": "formdata",
+            "formdata": [
+              {
+                "key": "emp_id",
+                "value": "4501619",
+                "type": "text"
+              },
+              {
+                "key": "password",
+                "value": "123456",
+                "type": "text"
+              }
+            ]
+          },
+          "url": {
+            "raw": "{{base_url}}/api/auto-fuel/v1/login",
+            "host": [
+              "{{base_url}}"
+            ],
+            "path": [
+              "api",
+              "auto-fuel",
+              "v1",
+              "login"
+            ]
+          }
+        },
+        "response": [],
+        "uid": "3576551-65f37ee3-5326-461d-991b-ab4ee72b7cd9"
+      },
+      {
+        "name": "api/auto-fuel/v1/vehicle/{vehicle_no}",
+        "id": "4980c511-0202-4666-99a9-a45b759114fc",
+        "protocolProfileBehavior": {
+          "disableBodyPruning": true
+        },
+        "request": {
+          "method": "POST",
+          "header": [],
+          "body": {
+            "mode": "formdata",
+            "formdata": []
+          },
+          "url": {
+            "raw": "{{base_url}}/api/auto-fuel/v1/vehicle/TS09PA3565",
+            "host": [
+              "{{base_url}}"
+            ],
+            "path": [
+              "api",
+              "auto-fuel",
+              "v1",
+              "vehicle",
+              "TS09PA3565"
+            ]
+          }
+        },
+        "response": [],
+        "uid": "3576551-4980c511-0202-4666-99a9-a45b759114fc"
+      }
+    ],
+    "auth": {
+      "type": "bearer",
+      "bearer": [
+        {
+          "key": "token",
+          "value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI5ODk0ZGQ5OC1jZmQwLTQzYzktOTBmZi05NDcyNjAyYzBkMmUiLCJqdGkiOiI0MmI3MDBiZjY5MWJhZDJkYTI3ZThiYzcwMWI3ZjcwMjFmYmEzNTc0MjU0YTFmNmE4YzE2NDRmZDg1NGQxNzliZmQwODRlMzQ5NjI2ZjQ4NSIsImlhdCI6MTY4MjE2MTc1NS4zMjgyNzMsIm5iZiI6MTY4MjE2MTc1NS4zMjgyNzUsImV4cCI6MTY5Nzk3Mjk1NS4xODg1NzgsInN1YiI6IjE5MTQ3Iiwic2NvcGVzIjpbXX0.OwX4xfL70QHdWwthK7BkTvv2XcSXznp6thzItIczCCD816dGmjX6CRyfz6F7y0HtKZh9-pIFOtdnlW7COxjNDKTjKa10yCau3EyVK2-DcXO7kqgrMFSnXR-xYCZUhYTXRGkUZ244lxoQZo0d5FyJzvlJZGV4IOjEDMaPlK3oupLMaFconyzGYx07QnnzX4E5jfrnnmoZhwlfaRqjGhsmqwaPp1xMMOUaqVLpLB69h7qFvSF8FOJOXAMlSDgxWhgmIkXW0i9m52vPc32EI7CgfFd7k9XKUfZ9nYTRDncZGZ89JTytHWwPBmIPZO1SwJfSnauN7yXXYWmtctZ8j0B9ztaf1Dn4nZYxtziqrwUT-5V3Ft6gcXFzVqNNnTAwy0KYkHaYYc8LzFyGWW1EIX93OHfBzobyG3gwoANoOUFpK-ZVMzfHVZi7MFgmJMUucsLz4cLE0dHItoBRB6ZQWhDrF6GhBBBEte4iKNQGLtDsW5UjBFogIfV9SgClouTKEwYviaucs2BUPM3qivRf87A7FMT17U_pSe-iHs1uqi_9DT9W8fw9c1SlaYDB1RxtODSWxw8_wXJ8iHdbaGQxSgtriGyAmFPE4EXZ_IOY2hfk2nvdrez0Dh2-bt98-6HQpmde7EP48w1q1ZUoQWrVZqBAkcPgnfV4j4eBgnlpVM77hsQ",
+          "type": "string"
+        }
+      ]
+    },
+    "event": [
+      {
+        "listen": "prerequest",
+        "script": {
+          "id": "18fc0462-9bab-41ba-b85a-ee14bdef5e7a",
+          "type": "text/javascript",
+          "exec": [""]
+        }
+      },
+      {
+        "listen": "test",
+        "script": {
+          "id": "da19802b-7acd-4c48-b135-28337cedd721",
+          "type": "text/javascript",
+          "exec": [""]
+        }
+      }
+    ]
+  }
+}
