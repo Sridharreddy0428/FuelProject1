@@ -16,7 +16,7 @@ with open(CwaDataToIotCore_json) as f:
 issues=p.Today_total_full_issues
 transactions=p.Toatl_Transactions
 Nozil_status=p.Nozil_status
-token=p.Token
+#token=p.Token
 
 UserId=None
 pump_name=None
@@ -75,6 +75,7 @@ def login_window():
             login.destroy()
             
     def loginAuthentication():
+        global token
         url = "https://tspvahan.tspolice.gov.in/api/auto-fuel/v1/login"
         login_user_Id=username_entry.get()
         password=password_entry.get()
@@ -253,9 +254,10 @@ def start_fuel(page):
     values = [pump_name,dispenser_No,Nozil_No,price,density,Fuel]
     
     for i in range(len(headings)):
-        Label(pump_detail_frame, text=headings[i]+str(values[i]),bg='white',bd=1,font=("Arial", 15),relief="solid",wraplength=250).grid(row=i+1, column=0, sticky="w", pady=6)
+        Label(pump_detail_frame, text=headings[i],width=20,bg='white',bd=1,font=("Arial bold", 15),wraplength=200,anchor="w").grid(row=i*2, column=0,pady=(6, 0.01), padx=10)
+        Label(pump_detail_frame, text=str(values[i]),width=22,bg='white',bd=1,font=("Arial", 14),relief="solid",wraplength=250,anchor="w").grid(row=2*i+1, column=0,pady=(0.01, 6), padx=10)
 
-    pump_detail_frame.place(relx=0,rely=0.45)
+    pump_detail_frame.place(relx=0.005,rely=0.35)
     
     details_label = Label(Qr_frame, text="Please Scan Vehicle Qr code", bg="white", font=("Arial", 16),relief="solid")
     details_label.pack(side="top", padx=1, pady=50)
@@ -269,13 +271,13 @@ def Qr_details(vehicle_no):
     conn = http.client.HTTPSConnection("tspvahan.tspolice.gov.in")
     payload = ''
     headers = {
-    'Authorization': token,
+    'Authorization': 'Bearer '+token,
     'Cookie': 'XSRF-TOKEN=eyJpdiI6ImVPNW5lZnI3d2p5Um5DV25uS0dYdmc9PSIsInZhbHVlIjoiNDh4WWg1dFlDeFBUWlB4RXphTzZkR2laTHFWSm5CT3V1VmVPZDhoTjRFdTFSSzlDWGN1MkwvbVA4T3JDeGlMb3V1SnFGRXIxbEcybUtKWFVOSmNJVXpvcHhXbUI2ZG1MMVB6TUg5N3J2alJFYUJPM3N5dVR1UktTcTdTOTNOS2ciLCJtYWMiOiIzMzE3NmNhNzdhZTMwNDM0MjM5YmJkNzA4ZjZiNGExOGEyMDcwMGExOGIxOTRmMGNkYzNkZDQ3ZGUwNWJmYTBkIiwidGFnIjoiIn0%3D; tspvahan_session=eyJpdiI6ImVEMklSRVhTVjVVRkFiM0tuQVJlaGc9PSIsInZhbHVlIjoiSUY2cStEN0QvdWlhcDNFenBrWU1HU1lDc1djNGwyWktsQ2JySWVFTTZyRzR4KzF6ajlMUVhvQmxBcURSbzJ1ekg5Sk0vR0JmbnpWVjdGWXI5QjZUdUZJaU1LNVpENVdyNTFLSE82dmFXUVBzTit5VWdPamMyMVZvZmpwODltVU8iLCJtYWMiOiI0MGViOTM1Zjc0ZTRmNTVkNWE5N2QzMjc1MzZiNjVmZmJhMjJiM2VlN2ZhYTBlYWZiNzFkZDE0YzEzNmJiODNiIiwidGFnIjoiIn0%3D'
     }
     conn.request("POST", "/api/auto-fuel/v1/vehicle/{}".format(vehicle_no), payload, headers)
     res = conn.getresponse()
     data = res.read()
-    print(data.decode("utf-8"))
+    #print(data.decode("utf-8"))
     Data=json.loads(data.decode("utf-8"))
     #print(Data)
 
@@ -290,9 +292,9 @@ def Qr_details(vehicle_no):
     fuel_type=(Data['response']['fuel_type'])
     current_meter_reading=(Data['response']['current_meter_reading'])
     vehicle_unit_name=(Data['response']['vehicle_unit_name'])
-    vehicle_category=print(Data['response']['vehicle_category'])
-    vehicle_groups=print(Data['response']['vehicle_groups'])
-    vehicle_usage_purpose=print(Data['response']['vehicle_usage_purpose'])
+    vehicle_category=(Data['response']['vehicle_category'])
+    vehicle_groups=(Data['response']['vehicle_groups'])
+    vehicle_usage_purpose=(Data['response']['vehicle_usage_purpose'])
     regular_quota=(Data['response']['regular_quota'])
     additional_quota=(Data['response']['additional_quota'])
     total_quota=(Data['response']['total_quota'])
@@ -352,9 +354,10 @@ def fuel_afterScan(Page):
     values = [pump_name,dispenser_No,Nozil_No,price,density,Fuel]
     
     for i in range(len(headings)):
-        Label(pump_detail_frame, text=headings[i]+str(values[i]),bg='white',bd=1,font=("Arial", 15),relief="solid",wraplength=250).grid(row=i+1, column=0, sticky="w", pady=6)
+        Label(pump_detail_frame, text=headings[i],width=20,bg='white',bd=1,font=("Arial bold", 15),wraplength=200,anchor="w").grid(row=i*2, column=0,pady=(6, 0.01), padx=10)
+        Label(pump_detail_frame, text=str(values[i]),width=22,bg='white',bd=1,font=("Arial", 14),relief="solid",wraplength=250,anchor="w").grid(row=2*i+1, column=0,pady=(0.01, 6), padx=10)
 
-    pump_detail_frame.place(relx=0,rely=0.45)
+    pump_detail_frame.place(relx=0.005,rely=0.35)
     
     headings1 = ['Vehicle No: ', 'name: ', 'Status: ', 'officer: ', 'Driver: ', 'Fuel type: ']
     values1 = [vehicle_no,vehicle_name,emp_status,officer,driver_name,fuel_type]
@@ -362,12 +365,12 @@ def fuel_afterScan(Page):
     values2=[total_quota,available_quota,drown,tank_capacity,current_meter_reading,driver_id]
     
     for i in range(len(headings1)):
-        Label(afterScanDetails_frame, text=headings1[i]+str(values1[i]),width=30,bg='white',bd=1,font=("Arial", 14),relief="solid",wraplength=300).grid(row=i, column=0, sticky="w", pady=6,padx=90)
+        Label(afterScanDetails_frame, text=headings1[i]+str(values1[i]),width=30,bg='white',bd=1,font=("Arial", 14),relief="solid",wraplength=300).grid(row=i, column=0, sticky="w", pady=6,padx=50)
 
     for j in range(len(headings2)):
-        Label(afterScanDetails_frame, text=headings2[j]+str(values2[j]),width=30,bg='white',bd=1,font=("Arial", 14),relief="solid",wraplength=300).grid(row=j, column=4, sticky="w", pady=6,padx=90)
+        Label(afterScanDetails_frame, text=headings2[j]+str(values2[j]),width=30,bg='white',bd=1,font=("Arial", 14),relief="solid",wraplength=300).grid(row=j, column=3, sticky="w", pady=6,padx=50)
 
-    afterScanDetails_frame.place(relx=0.25, rely=0.45)
+    afterScanDetails_frame.place(relx=0.25, rely=0.40)
        
     fuel_status_label = Label(afterScanDetails_frame, text="Started Filling", bg="white", font=("Arial bold", 16),fg='green')
     fuel_status_label.grid(row=j+2, columnspan=5, pady=10)
@@ -437,9 +440,10 @@ def transactions_window(page):
     values = [pump_name,dispenser_No,Nozil_No,price,density,Fuel]
     
     for i in range(len(headings)):
-        Label(pump_detail_frame, text=headings[i]+str(values[i]),bg='white',bd=1,font=("Arial", 14),relief="solid",wraplength=250).grid(row=i+1, column=0, sticky="w", pady=6)
+        Label(pump_detail_frame, text=headings[i],width=20,bg='white',bd=1,font=("Arial bold", 15),wraplength=200,anchor="w").grid(row=i*2, column=0,pady=(6, 0.01), padx=10)
+        Label(pump_detail_frame, text=str(values[i]),width=22,bg='white',bd=1,font=("Arial", 14),relief="solid",wraplength=250,anchor="w").grid(row=2*i+1, column=0,pady=(0.01, 6), padx=10)
 
-    pump_detail_frame.place(relx=0,rely=0.45)
+    pump_detail_frame.place(relx=0.005,rely=0.35)
     
     # Create a frame to hold the table
     table_frame = Frame(transaction,bg='white',bd=1,relief="solid")
@@ -460,7 +464,7 @@ def transactions_window(page):
                 Label(table_frame, text=table_values[i], bg='white', font=("Arial", 14), bd=1,relief="solid",wraplength=150).grid(row=j, column=i, sticky='nsew')
     
     # Position the table in the center of the screen
-    table_frame.place(relx=0.60, rely=0.60, anchor=CENTER)
+    table_frame.place(relx=0.61, rely=0.60, anchor=CENTER)
     transaction.after(5000, lambda: fuel_afterScan(transaction))
     transaction.mainloop()
 
@@ -525,7 +529,7 @@ def dashboard_window(page):
     button_frame.pack(side='top', anchor='ne')
     
     userId_label = Label(dashboard, text="Login User id : {} ".format(UserId), bg="white", bd=1, font=("Arial bold", 24),relief="solid")
-    userId_label.pack(side="top", padx=40, pady=50)
+    userId_label.pack(side="top", padx=40, pady=10)
     
     issue_label = Label(details_frame, text="Today Total Full issues : {} ".format(issues), bg="white", font=("Arial", 16),bd=1,relief="solid",wraplength=400)
     issue_label.grid(row=0, column=0, padx=10, pady=10)
@@ -536,27 +540,28 @@ def dashboard_window(page):
     nozil_label = Label(details_frame, text="nozil status : {}".format(Nozil_status), bg="white", font=("Arial", 16),bd=1,relief="solid",wraplength=400)
     nozil_label.grid(row=0, column=2, padx=10, pady=10)
     
-    details_frame.place(relx=0.25,rely=0.3)
+    details_frame.place(relx=0.25,rely=0.25)
         
     # create a frame for the labels
     details_frame = Frame(dashboard)
-    details_frame.pack(side=LEFT, padx=10, pady=5)
+    details_frame.pack(side=LEFT, padx=10, pady=4)
     
     # create the labels and add them to the frame
     headings = ['Pump Name: ', 'Dispenser No: ', 'Nozzle No: ', 'Price: ', 'Density: ', 'Fuel type: ']
     values = [pump_name,dispenser_No,Nozil_No,price,density,Fuel]
 
     for i in range(len(headings)):
-        Label(pump_detail_frame, text=headings[i],width=20,bg='white',bd=1,font=("Arial bold", 15),wraplength=200,anchor="w").grid(row=i*2, column=0,pady=(6, 2), padx=10)
-        Label(pump_detail_frame, text=str(values[i]),width=23,bg='white',bd=1,font=("Arial", 14),relief="solid",wraplength=250,anchor="w").grid(row=2*i+1, column=0,pady=(2, 6), padx=10)
+        Label(pump_detail_frame, text=headings[i],width=20,bg='white',bd=1,font=("Arial bold", 15),wraplength=200,anchor="w").grid(row=i*2, column=0,pady=(6, 0.01), padx=10)
+        Label(pump_detail_frame, text=str(values[i]),width=22,bg='white',bd=1,font=("Arial", 14),relief="solid",wraplength=250,anchor="w").grid(row=2*i+1, column=0,pady=(0.01, 6), padx=10)
         
-    pump_detail_frame.place(relx=0,rely=0.35)
+    pump_detail_frame.place(relx=0.005,rely=0.35)
     
     # Set up the promotion_frame and promotion_label as before
-    promotion_frame = tk.Frame(dashboard, bg="white", padx=270, pady=60, bd=1, relief="solid")
+    #promotion_frame = tk.Frame(dashboard, bg="white", padx=270, pady=60, bd=1, relief="solid")
+    promotion_frame = tk.Frame(dashboard, bg="white", padx=375, pady=110, bd=1, relief="solid")
     promotion_label = tk.Label(promotion_frame, text="Promotion Banner", bg="white", font=("Arial", 24))
     promotion_label.pack(side="top", padx=0, pady=50)
-    promotion_frame.place(relx=0.25, rely=0.45)
+    promotion_frame.place(relx=0.25, rely=0.40)
 
     # Define a function to get a list of image filenames in a directory
     def get_image_filenames(dir):
