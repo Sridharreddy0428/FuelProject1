@@ -1,27 +1,22 @@
 from tkinter import *
 from tkinter import messagebox
-from PIL import ImageTk, Image
+from tkinter import PhotoImage
 import tkinter as tk
 import json,os
+import http.client
+import requests
 
 p = lambda:None
-CwaDataToIotCore_json = 'D:/FuelProject/resources/parameters.json'
+CwaDataToIotCore_json = './resources/parameters.json'
 with open(CwaDataToIotCore_json) as f:
     json_data = f.read()
-    #print(json_data)
     p.__dict__ = json.loads(json_data)
     f.close()
 
-# UserId=p.UserId
-# pump_name=p.pump_name
 issues=p.Today_total_full_issues
 transactions=p.Toatl_Transactions
 Nozil_status=p.Nozil_status
-# dispenser_No=p.dispenser_no
-# Nozil_No=p.Nozil_no
-# price=p.Price
-# density=p.density
-# Fuel=p.Fuel_type
+token=p.Token
 
 UserId=None
 pump_name=None
@@ -39,16 +34,8 @@ def login_window():
     login.attributes('-fullscreen', True)
     login.configure(bg="white")
 
-    # Load the logo image
-    logo_image = Image.open("logo.png")
-
-    # Resize the image to fit the window
-    logo_image = logo_image.resize((300, 300), Image.ANTIALIAS)
-
-    # Convert the image to a Tkinter PhotoImage
-    logo_photo = ImageTk.PhotoImage(logo_image)
-
-    # Create a label to display the logo
+    # Load the logo image & Create a label to display the logo
+    logo_photo = PhotoImage(file="logo.png") 
     logo_label = Label(login, image=logo_photo, bg="white")
     logo_label.pack(side=TOP, pady=10)
 
@@ -72,12 +59,13 @@ def login_window():
 
     def login_action():
         # Authenticate user credentials here
-        if username_entry.get() == "admin" and password_entry.get() == "admin123":
-            login.destroy()
+        login_status,login_message=loginAuthentication()
+        print(login_status,login_message)
+        if login_status == 1 and login_message == "success":
             if UserId is None:
-                dashboard_window1()
+                dashboard_window1(login)
             else:
-                dashboard_window()
+                dashboard_window(login)
         else:
             login_status_label.config(text="Invalid username or password",font=("Arial", 12,"bold"),fg="red")
 
@@ -85,20 +73,60 @@ def login_window():
     def exit_app():
         if messagebox.askyesno("Exit", "Are you sure you want to exit?"):
             login.destroy()
+            
+    def loginAuthentication():
+        url = "https://tspvahan.tspolice.gov.in/api/auto-fuel/v1/login"
+        login_user_Id=username_entry.get()
+        password=password_entry.get()
+        payload = {'emp_id': str(login_user_Id),'password': str(password)}
+        files=[]
+        UserJson = './resources/users.json'
+        # Read the JSON file
+        with open(UserJson) as file:
+            jsonData = json.load(file)
+
+        # Check if the key exists in the 'users' dictionary
+        if login_user_Id not in jsonData['users']:
+            headers = {}
+        else:
+            token=jsonData['users'][login_user_Id]
+            headers={}
+            headers['Authorization']='Bearer '+token
+
+        response = requests.request("POST", url, headers=headers, data=payload, files=files)
+        data=(json.loads(response.text))
+        
+        login_status=(data['statusCode'])
+        login_message=(data['message'])
+        if login_status ==1 and login_message =="success":
+            token=(data['response']['token'])
+            
+            # Check if the key exists in the 'users' dictionary
+            if login_user_Id not in jsonData['users']:
+                # Append the key-value pair to the 'users' dictionary
+                jsonData['users'][login_user_Id] = token
+                #print("new data is",jsonData)
+
+                # Write the updated JSON back to the file
+                with open(UserJson, 'w') as file:
+                    json.dump(jsonData, file)
+            file.close()
+        return login_status,login_message
 
     Button(login_frame, text="Login", bg="#0B5394", fg="white", font=("Arial", 12), command=login_action).grid(row=3, columnspan=2, pady=20)
 
     # # Add an exit button to quit the application
-    # exit_button = Button(login, text="Exit", bg="red", fg="white", font=("Arial", 12), command=exit_app)
-    # # exit_button.pack(side=TOP, anchor='ne')
-    # exit_button.pack(side=BOTTOM, pady=10)
+    exit_button = Button(login, text="Exit", bg="red", fg="white", font=("Arial", 12), command=exit_app)
+    # exit_button.pack(side=TOP, anchor='ne')
+    exit_button.pack(side=BOTTOM, pady=10)
     # Pack the login form frame
     login_frame.pack() 
-
+    
     login.mainloop()
-
+    
 #settings window
-def settings_window():
+def settings_window(page):
+    page.destroy()
     settings = Tk()
     settings.title("Settings")
     settings.attributes('-fullscreen', True)
@@ -108,11 +136,10 @@ def settings_window():
     button_frame1 = Frame(settings, bg="white", padx=10, pady=10)
     
     def dashboard_page():
-        settings.destroy()
         if UserId != None:
-            dashboard_window()
+            dashboard_window(settings)
         else:
-            dashboard_window1()
+            dashboard_window1(settings)
     
     # Create the settings and logout buttons
     back_btn = Button(button_frame1, text="Back", bg="blue", fg="white", font=("Arial", 16),command=dashboard_page)
@@ -127,81 +154,55 @@ def settings_window():
     details_frame = Frame(settings, bg="white", padx=50, pady=90, bd=2, relief="solid")
     # Create the login form
 
-
     def validate_input(new_value):
         if len(new_value) > 20:
             messagebox.showerror("Error", "Input can only be up to 20 characters.")
             return False
         return True
-
-    id_label = Label(details_frame, text="Login User id:", bg="white", font=("Arial", 18))
-    id_entry = tk.Entry(details_frame, width=25, font=("Arial", 18), validate="key", validatecommand=(details_frame.register(validate_input), '%P'))
-    #id_entry = Entry(details_frame, width=25, font=("Arial", 18))
-    id_label.grid(row=0, column=0, pady=10)
-    id_entry.grid(row=0, column=1)
     
-    pumpname_label = Label(details_frame, text="pump_name:", bg="white", font=("Arial", 18))
-    pumpname_entry = tk.Entry(details_frame, width=25, font=("Arial", 18), validate="key", validatecommand=(details_frame.register(validate_input), '%P'))
-    # pumpname_entry = Entry(details_frame, width=25, font=("Arial", 18))
-    pumpname_label.grid(row=1, column=0, pady=10)
-    pumpname_entry.grid(row=1, column=1)
-    
-    dispenser_label = Label(details_frame, text="dispenser_no:", bg="white", font=("Arial", 18))
-    #dispenser_entry = Entry(details_frame, width=25, font=("Arial", 18))
-    dispenser_entry = tk.Entry(details_frame, width=25, font=("Arial", 18), validate="key", validatecommand=(details_frame.register(validate_input), '%P'))
-    dispenser_label.grid(row=2, column=0, pady=10)
-    dispenser_entry.grid(row=2, column=1)
-    
-    nozil_label = Label(details_frame, text="Nozil_No:", bg="white", font=("Arial", 18))
-    #nozil_entry = Entry(details_frame, width=25, font=("Arial", 18))
-    nozil_entry = tk.Entry(details_frame, width=25, font=("Arial", 18), validate="key", validatecommand=(details_frame.register(validate_input), '%P'))
-    nozil_label.grid(row=3, column=0, pady=10)
-    nozil_entry.grid(row=3, column=1)
-    
-    price_label = Label(details_frame, text="price:", bg="white", font=("Arial", 18))
-    #price_entry = Entry(details_frame, width=25, font=("Arial", 18))
-    price_entry = tk.Entry(details_frame, width=25, font=("Arial", 18), validate="key", validatecommand=(details_frame.register(validate_input), '%P'))
-    price_label.grid(row=4, column=0, pady=10)
-    price_entry.grid(row=4, column=1)
-    
-    density_label = Label(details_frame, text="density:", bg="white", font=("Arial", 18))
-    #density_entry = Entry(details_frame, width=25, font=("Arial", 18))
-    density_entry = tk.Entry(details_frame, width=25, font=("Arial", 18), validate="key", validatecommand=(details_frame.register(validate_input), '%P'))
-    density_label.grid(row=5, column=0, pady=10)
-    density_entry.grid(row=5, column=1)
-    
-    Fuel_label = Label(details_frame, text="Fuel Type:", bg="white", font=("Arial", 18))
-    #Fuel_entry = Entry(details_frame, width=25, font=("Arial", 18))
-    Fuel_entry = tk.Entry(details_frame, width=25, font=("Arial", 18), validate="key", validatecommand=(details_frame.register(validate_input), '%P'))
-    Fuel_label.grid(row=6, column=0, pady=10)
-    Fuel_entry.grid(row=6, column=1)
+    fields = [
+        ("Login User id:", "id_entry"),
+        ("pump_name:", "pumpname_entry"),
+        ("dispenser_no:", "dispenser_entry"),
+        ("Nozil_No:", "nozil_entry"),
+        ("price:", "price_entry"),
+        ("density:", "density_entry"),
+        ("Fuel Type:", "Fuel_entry")
+    ]
+    entry_fields = {}
+    for row, (label_text, entry_name) in enumerate(fields):
+        label = Label(details_frame, text=label_text, bg="white", font=("Arial", 18))
+        entry = tk.Entry(details_frame, width=25, font=("Arial", 18), validate="key", validatecommand=(details_frame.register(validate_input), '%P'))
+        label.grid(row=row, column=0, pady=10)
+        entry.grid(row=row, column=1)
+        entry_fields[entry_name] = entry
        
     def save_action():
         # save user data here
         global UserId,pump_name,dispenser_No,Nozil_No,price,density,Fuel
-        UserId=id_entry.get()
-        pump_name=pumpname_entry.get()
-        dispenser_No=dispenser_entry.get()
-        Nozil_No=nozil_entry.get()
-        price=price_entry.get()
-        density=density_entry.get()
-        Fuel=Fuel_entry.get()
+        UserId=entry_fields["id_entry"].get()
+        pump_name=entry_fields["pumpname_entry"].get()
+        dispenser_No=entry_fields["dispenser_entry"].get()
+        Nozil_No=entry_fields["nozil_entry"].get()
+        price=entry_fields["price_entry"].get()
+        density=entry_fields["density_entry"].get()
+        Fuel=entry_fields["Fuel_entry"].get()
         print("id :{},pump_name : {},dispenser_No :{},Nozil_No : {},price : {},density {},Fuel : {}".format(UserId,pump_name,dispenser_No,Nozil_No,price,density,Fuel))
         if not all([UserId, pump_name, dispenser_No, Nozil_No, price, density, Fuel]):
             messagebox.showerror("Error", "Please fill all fields.")
             return
 
-        settings.destroy()
-        dashboard_window()
+        dashboard_window(settings)
         
     details_frame.pack()
     Button(details_frame, text="Save", bg="#0B5394", fg="white", font=("Arial", 16), command=save_action).grid(row=7, columnspan=2, pady=20)
     
 #Fuel start window   
-def start_fuel():
+def start_fuel(page):
     global UserId,issues,transactions,Fuel,density,price,Nozil_status,Nozil_No,dispenser_No
     Nozil_status='Open'
-    
+    page.destroy()
+
     # Create the window and set it to full screen
     fuelPage = Tk()
     fuelPage.title("Fuel-Page-1")
@@ -217,8 +218,7 @@ def start_fuel():
     Qr_frame = tk.Frame(fuelPage, bg="white", padx=325, pady=60, bd=1, relief="solid")
 
     def settings():
-        fuelPage.destroy()
-        settings_window()
+        settings_window(fuelPage)
         
     # Create the settings and logout buttons
     settings_btn = Button(button_frame, text="Settings", bg="blue", fg="white", font=("Arial", 14),command=settings) #(command=settings)
@@ -253,7 +253,7 @@ def start_fuel():
     values = [pump_name,dispenser_No,Nozil_No,price,density,Fuel]
     
     for i in range(len(headings)):
-        Label(pump_detail_frame, text=headings[i]+values[i],bg='white',bd=1,font=("Arial", 15),relief="solid",wraplength=250).grid(row=i+1, column=0, sticky="w", pady=6)
+        Label(pump_detail_frame, text=headings[i]+str(values[i]),bg='white',bd=1,font=("Arial", 15),relief="solid",wraplength=250).grid(row=i+1, column=0, sticky="w", pady=6)
 
     pump_detail_frame.place(relx=0,rely=0.45)
     
@@ -262,11 +262,49 @@ def start_fuel():
     Qr_frame.place(relx=0.25, rely=0.45)
 
     # Schedule the function to run after 10 seconds
-    fuelPage.after(15000, lambda: fuel_afterScan(fuelPage))
+    fuelPage.after(5000, lambda: transactions_window(fuelPage))
     
-def fuel_afterScan(Page):
-    Page.destroy()
+def Qr_details(vehicle_no):
+    global vehicle_name,emp_status,officer,driver_name,fuel_type,total_quota,available_quota,drown,tank_capacity,current_meter_reading,driver_id
+    conn = http.client.HTTPSConnection("tspvahan.tspolice.gov.in")
+    payload = ''
+    headers = {
+    'Authorization': token,
+    'Cookie': 'XSRF-TOKEN=eyJpdiI6ImVPNW5lZnI3d2p5Um5DV25uS0dYdmc9PSIsInZhbHVlIjoiNDh4WWg1dFlDeFBUWlB4RXphTzZkR2laTHFWSm5CT3V1VmVPZDhoTjRFdTFSSzlDWGN1MkwvbVA4T3JDeGlMb3V1SnFGRXIxbEcybUtKWFVOSmNJVXpvcHhXbUI2ZG1MMVB6TUg5N3J2alJFYUJPM3N5dVR1UktTcTdTOTNOS2ciLCJtYWMiOiIzMzE3NmNhNzdhZTMwNDM0MjM5YmJkNzA4ZjZiNGExOGEyMDcwMGExOGIxOTRmMGNkYzNkZDQ3ZGUwNWJmYTBkIiwidGFnIjoiIn0%3D; tspvahan_session=eyJpdiI6ImVEMklSRVhTVjVVRkFiM0tuQVJlaGc9PSIsInZhbHVlIjoiSUY2cStEN0QvdWlhcDNFenBrWU1HU1lDc1djNGwyWktsQ2JySWVFTTZyRzR4KzF6ajlMUVhvQmxBcURSbzJ1ekg5Sk0vR0JmbnpWVjdGWXI5QjZUdUZJaU1LNVpENVdyNTFLSE82dmFXUVBzTit5VWdPamMyMVZvZmpwODltVU8iLCJtYWMiOiI0MGViOTM1Zjc0ZTRmNTVkNWE5N2QzMjc1MzZiNjVmZmJhMjJiM2VlN2ZhYTBlYWZiNzFkZDE0YzEzNmJiODNiIiwidGFnIjoiIn0%3D'
+    }
+    conn.request("POST", "/api/auto-fuel/v1/vehicle/{}".format(vehicle_no), payload, headers)
+    res = conn.getresponse()
+    data = res.read()
+    print(data.decode("utf-8"))
+    Data=json.loads(data.decode("utf-8"))
+    #print(Data)
+
+    statusCode=(Data['statusCode'])
+    messageStatus=(Data['message'])
+    vehicle_name=(Data['response']['vehicle_name'])
+    emp_status=(Data['response']['status'])
+    officer=(Data['response']['officer'])
+    driver_id=(Data['response']['drivers'][0]['id'])
+    driver_name=(Data['response']['drivers'][0]['full_name'])
+    mobile_no=(Data['response']['drivers'][0]['mobile_no'])
+    fuel_type=(Data['response']['fuel_type'])
+    current_meter_reading=(Data['response']['current_meter_reading'])
+    vehicle_unit_name=(Data['response']['vehicle_unit_name'])
+    vehicle_category=print(Data['response']['vehicle_category'])
+    vehicle_groups=print(Data['response']['vehicle_groups'])
+    vehicle_usage_purpose=print(Data['response']['vehicle_usage_purpose'])
+    regular_quota=(Data['response']['regular_quota'])
+    additional_quota=(Data['response']['additional_quota'])
+    total_quota=(Data['response']['total_quota'])
+    drown=(Data['response']['drown'])
+    available_quota=(Data['response']['available_quota'])
+    tank_capacity=(Data['response']['tank_capacity'])
+
+    return vehicle_name,emp_status,officer,driver_name,fuel_type,total_quota,available_quota,drown,tank_capacity,current_meter_reading,driver_id
+   
+def fuel_afterScan(Page):    
     global UserId,issues,transactions,Fuel,density,price,Nozil_status,Nozil_No,dispenser_No
+    Page.destroy()
     
     # Create the window and set it to full screen
     fuel_afterScan = Tk()
@@ -281,10 +319,9 @@ def fuel_afterScan(Page):
     #Qr_frame = Frame(fuelPage, bg="white", padx=400, pady=60, bd=1, relief="solid")
     
     afterScanDetails_frame = tk.Frame(fuel_afterScan, bg="white", padx=50, pady=30, bd=1, relief="solid")
-
+    afterScanDetails_frame.pack_propagate(0)
     def settings():
-        fuel_afterScan.destroy()
-        settings_window()
+        settings_window(fuel_afterScan)
         
     # Create the settings and logout buttons
     settings_btn = Button(button_frame, text="Settings", bg="blue", fg="white", font=("Arial", 14),command=settings) #(command=settings)
@@ -315,38 +352,42 @@ def fuel_afterScan(Page):
     values = [pump_name,dispenser_No,Nozil_No,price,density,Fuel]
     
     for i in range(len(headings)):
-        Label(pump_detail_frame, text=headings[i]+values[i],bg='white',bd=1,font=("Arial", 15),relief="solid",wraplength=250).grid(row=i+1, column=0, sticky="w", pady=6)
+        Label(pump_detail_frame, text=headings[i]+str(values[i]),bg='white',bd=1,font=("Arial", 15),relief="solid",wraplength=250).grid(row=i+1, column=0, sticky="w", pady=6)
 
     pump_detail_frame.place(relx=0,rely=0.45)
     
     headings1 = ['Vehicle No: ', 'name: ', 'Status: ', 'officer: ', 'Driver: ', 'Fuel type: ']
-    values1 = ['01','MM boloro','officer /mtpool','officer name','driver name','diesel']
+    values1 = [vehicle_no,vehicle_name,emp_status,officer,driver_name,fuel_type]
     headings2=['Total quota:','Available quota: ','Down: ','Tank Capacity: ','Current transactions: ','Transaction id: ']
-    values2=['150','100','50','25 ltrs','25','--']
+    values2=[total_quota,available_quota,drown,tank_capacity,current_meter_reading,driver_id]
     
     for i in range(len(headings1)):
-        Label(afterScanDetails_frame, text=headings1[i]+values1[i],bg='white',bd=1,font=("Arial", 15),relief="solid",wraplength=250).grid(row=i, column=0, sticky="w", pady=6,padx=90)
+        Label(afterScanDetails_frame, text=headings1[i]+str(values1[i]),width=30,bg='white',bd=1,font=("Arial", 14),relief="solid",wraplength=300).grid(row=i, column=0, sticky="w", pady=6,padx=90)
 
     for j in range(len(headings2)):
-        Label(afterScanDetails_frame, text=headings2[j]+values2[j],bg='white',bd=1,font=("Arial", 15),relief="solid",wraplength=250).grid(row=j, column=4, sticky="w", pady=6,padx=90)
+        Label(afterScanDetails_frame, text=headings2[j]+str(values2[j]),width=30,bg='white',bd=1,font=("Arial", 14),relief="solid",wraplength=300).grid(row=j, column=4, sticky="w", pady=6,padx=90)
 
     afterScanDetails_frame.place(relx=0.25, rely=0.45)
        
-    login_status_label = Label(afterScanDetails_frame, text="Started Filling", bg="white", font=("Arial bold", 16),fg='green')
-    login_status_label.grid(row=j+2, columnspan=5, pady=10)
-    fuel_afterScan.after(15000, lambda: completion_window())
+    fuel_status_label = Label(afterScanDetails_frame, text="Started Filling", bg="white", font=("Arial bold", 16),fg='green')
+    fuel_status_label.grid(row=j+2, columnspan=5, pady=10)
+    fuel_afterScan.after(5000, lambda: completion_window())
     
     def completion_window():
         global Nozil_status
-        login_status_label = Label(afterScanDetails_frame, text="Completed Filling", bg="white", font=("Arial bold", 16),fg='green')
-        login_status_label.grid(row=j+2, columnspan=5, pady=10)
+        fuel_status_label = Label(afterScanDetails_frame, text="Completed Filling", bg="white", font=("Arial bold", 16),fg='green')
+        fuel_status_label.grid(row=j+2, columnspan=5, pady=10)
         Nozil_status="Close"
         nozil_label = Label(details_frame, text="nozil status : {}".format(Nozil_status), bg="white", bd=1, font=("Arial", 16),relief="solid",wraplength=400)
         nozil_label.grid(row=0, column=2, padx=10, pady=10)
-        fuel_afterScan.after(15000, lambda: transactions_window(fuel_afterScan))    
+        fuel_afterScan.after(10000, lambda: dashboard_window(fuel_afterScan))    
    
-def transactions_window(fuelPage):
-    fuelPage.destroy()
+def transactions_window(page):
+    global vehicle_no,vehicle_name,emp_status,officer,driver_name,fuel_type,total_quota,available_quota,drown,tank_capacity,current_meter_reading,driver_id
+    vehicle_no='TS09PA3565'
+    vehicle_name,emp_status,officer,driver_name,fuel_type,total_quota,available_quota,drown,tank_capacity,current_meter_reading,driver_id=Qr_details(vehicle_no)
+    page.destroy()
+    
     global UserId,issues,transactions,Fuel,density,price,Nozil_status,Nozil_No,dispenser_No
     # Create the window and set it to full screen
     transaction = Tk()
@@ -358,12 +399,10 @@ def transactions_window(fuelPage):
     details_frame = Frame(transaction, bg="white", padx=10, pady=10, bd=1, relief="solid")
     pump_detail_frame = Frame(transaction, bg="white", padx=30, pady=10, bd=1, relief="solid")
     button_frame = Frame(transaction, bg="white", padx=10, pady=10)
-    
     #Qr_frame = tk.Frame(transaction, bg="white", padx=325, pady=60, bd=1, relief="solid")
 
     def settings():
-        transaction.destroy()
-        settings_window()
+        settings_window(transaction)
         
     # Create the settings and logout buttons
     settings_btn = Button(button_frame, text="Settings", bg="blue", fg="white", font=("Arial", 14),command=settings) #(command=settings)
@@ -398,7 +437,7 @@ def transactions_window(fuelPage):
     values = [pump_name,dispenser_No,Nozil_No,price,density,Fuel]
     
     for i in range(len(headings)):
-        Label(pump_detail_frame, text=headings[i]+values[i],bg='white',bd=1,font=("Arial", 14),relief="solid",wraplength=250).grid(row=i+1, column=0, sticky="w", pady=6)
+        Label(pump_detail_frame, text=headings[i]+str(values[i]),bg='white',bd=1,font=("Arial", 14),relief="solid",wraplength=250).grid(row=i+1, column=0, sticky="w", pady=6)
 
     pump_detail_frame.place(relx=0,rely=0.45)
     
@@ -408,7 +447,7 @@ def transactions_window(fuelPage):
     
     # Define the headings and values for the table
     table_headings = ['Vehicle No', 'Name', 'Status', 'Officer', 'Driver', 'Total Quota', 'Available Quota', 'Down', 'Current transactions','Fuel Type']
-    table_values = ['10', 'MM boloro', 'Officer / mt-pool', 'Officer name', 'Driver Name', '150', '100', '50','25','Diesel']
+    table_values = [vehicle_no, vehicle_name, emp_status, officer, driver_name, total_quota, available_quota, drown,current_meter_reading,fuel_type]
     
     # Create the grid lines for the table
     for i in range(len(table_headings)):
@@ -422,11 +461,13 @@ def transactions_window(fuelPage):
     
     # Position the table in the center of the screen
     table_frame.place(relx=0.60, rely=0.60, anchor=CENTER)
+    transaction.after(5000, lambda: fuel_afterScan(transaction))
     transaction.mainloop()
 
 #Empty data dashboard window       
-def dashboard_window1():
+def dashboard_window1(page):
     # Create the window and set it to full screen
+    page.destroy()
     dashboard1 = Tk()
     dashboard1.title("Dashboard")
     dashboard1.attributes('-fullscreen', True)
@@ -434,9 +475,8 @@ def dashboard_window1():
     button_frame1 = Frame(dashboard1, bg="white", padx=10, pady=10)
     Text_frame = Frame(dashboard1, bg="white", padx=250, pady=10, bd=1, relief="solid")
     
-    def settings():
-        dashboard1.destroy() 
-        settings_window()
+    def settings(): 
+        settings_window(dashboard1)
             
     # Create the settings and logout buttons
     settings_btn = Button(button_frame1, text="Settings", bg="blue", fg="white", font=("Arial", 14),command=settings) 
@@ -454,9 +494,10 @@ def dashboard_window1():
     Text_frame.place(relx=0.05, rely=0.15)
     
 # Dashboard window
-def dashboard_window():
+def dashboard_window(page):
     global UserId,issues,transactions,Fuel,density,price,Nozil_status,Nozil_No,dispenser_No
     # Create the window and set it to full screen
+    page.destroy()
     dashboard = Tk()
     dashboard.title("Dashboard")
     dashboard.attributes('-fullscreen', True)
@@ -468,11 +509,9 @@ def dashboard_window():
     button_frame = Frame(dashboard, bg="white", padx=10, pady=10)
 
     def settings():
-        dashboard.destroy()
-        settings_window()
+        settings_window(dashboard)
     def fuel():
-        dashboard.destroy()
-        start_fuel()
+        start_fuel(dashboard)
         
     # Create the settings and logout buttons
     settings_btn = Button(button_frame, text="Settings", bg="blue", fg="white", font=("Arial", 14),command=settings) 
@@ -506,11 +545,12 @@ def dashboard_window():
     # create the labels and add them to the frame
     headings = ['Pump Name: ', 'Dispenser No: ', 'Nozzle No: ', 'Price: ', 'Density: ', 'Fuel type: ']
     values = [pump_name,dispenser_No,Nozil_No,price,density,Fuel]
-    
-    for i in range(len(headings)):
-        Label(pump_detail_frame, text=headings[i]+values[i],bg='white',bd=1,font=("Arial", 15),relief="solid",wraplength=250).grid(row=i+1, column=0, sticky="w", pady=6)
 
-    pump_detail_frame.place(relx=0,rely=0.45)
+    for i in range(len(headings)):
+        Label(pump_detail_frame, text=headings[i],width=20,bg='white',bd=1,font=("Arial bold", 15),wraplength=200,anchor="w").grid(row=i*2, column=0,pady=(6, 2), padx=10)
+        Label(pump_detail_frame, text=str(values[i]),width=23,bg='white',bd=1,font=("Arial", 14),relief="solid",wraplength=250,anchor="w").grid(row=2*i+1, column=0,pady=(2, 6), padx=10)
+        
+    pump_detail_frame.place(relx=0,rely=0.35)
     
     # Set up the promotion_frame and promotion_label as before
     promotion_frame = tk.Frame(dashboard, bg="white", padx=270, pady=60, bd=1, relief="solid")
